@@ -46,7 +46,7 @@ for story in stories:
 
     cleaned_stories.append(cleaned_story)
     
-output_file = f"data/trends_cleaned_{date_string}.csv"
+output_file = f"data/trends_cleaned.csv"
 
 with open (output_file, "w", encoding = "utf-8") as file :
    fieldnames = [
