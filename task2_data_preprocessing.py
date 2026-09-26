@@ -4,14 +4,14 @@ import csv
 from datetime import datetime
 date_string = datetime.now().strftime("%Y%m%d")
 filename = f"data/trends_{date_string}.json"
-
+# Checking if the file exists in the first place
 if not os.path.exists(filename):
     print(f"{filename} does not exist")
     exit()
 
 cleaned_stories = []
 
-with open(filename, "r", encoding="utf-8") as file :
+with open(filename, "r", encoding="utf-8") as file : #Opening the file
     stories = json.load(file)
    
 required_fields =  [
@@ -24,6 +24,7 @@ required_fields =  [
     "collected_at"
 ]  
     
+#Cleaning
 for story in stories:
     if not all(field in story for field in required_fields):
         continue
@@ -46,9 +47,9 @@ for story in stories:
 
     cleaned_stories.append(cleaned_story)
     
-output_file = f"data/trends_cleaned.csv"
+output_file = f"data/trends_cleaned.csv" #Writing the csv file name
 
-with open (output_file, "w", encoding = "utf-8") as file :
+with open (output_file, "w", encoding = "utf-8") as file : #Writing the csv file
    fieldnames = [
         "post_id",
         "title",
