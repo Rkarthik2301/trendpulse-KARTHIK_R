@@ -85,8 +85,8 @@ if __name__ == "__main__":
 
     analysis.add_new_columns()
     print("\nNew columns added:")
-    print("engagement")
-    print("is_popular")
+    print(f"engagement \n", analysis.df["engagement"].head())
+    print(f"is_popular\n", analysis.df["is_popular"].head())
     
     analysis.df.to_csv(output_file,index=False)
     print(f"\nSaved to {output_file}")
