@@ -3,10 +3,13 @@ import json
 import os
 import time
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv() #Getting the api keys from the .env file
 
 #initializing the urls and headers
-TOP_STORIES_URL ="https://hacker-news.firebaseio.com/v0/topstories.json"
-ITEM_URL = "https://hacker-news.firebaseio.com/v0/item/{}.json"
+TOP_STORIES_URL = os.getenv("TOP_STORIES_URL")
+ITEM_URL = os.getenv("ITEM_URL")
 headers = {"User-Agent": "TrendPulse/1.0"}
 
 #creating the keywords for search
