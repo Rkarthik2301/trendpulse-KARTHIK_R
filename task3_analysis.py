@@ -8,56 +8,85 @@ class perform_analysis():
         self.df = pd.read_csv(self.filepath)
         
     def head(self):
-        return self.df.head() #Return the first 5 rows
-    
-    def shape(self):
-        return (self.df.shape) #Return the shape of the dataframe
-    
-    def columns(self):
-        return self.df.columns #Return the columns of the csv file
-    
-    def category_counts(self):
-        category_counts = self.df["category"].value_counts() #Calculating No of stories in each category
-        return category_counts
-    
-    def average_score(self):
-        average_score = self.df["score"].mean() #Calculating Mean
-        return average_score
-    
-    def median_score(self):
-        median_score = self.df["score"].median() #Calculating Median
-        return median_score
-    
-    def highest_score_story(self):
-        highest_score_story_details = self.df.loc[self.df["score"].idxmax()] #Getting the data of the highest scoring story
-        highest_score_story = highest_score_story_details["title"] # Getting the title of the story
-        return highest_score_story
-    
-    def highest_score(self):
-        highest_score = np.max(self.df["score"]) #Calculating highest score 
-        return highest_score    
-    
-    def SCM(self):
-        Average_Score_by_Category = self.df.groupby("category")["score"].mean() #Calculating Mean per category
-        return Average_Score_by_Category
-    
-    def CCM(self):
-        Average_comments_by_Category = self.df.groupby("category")["num_comments"].mean() #Calculating Comments per category
-        return Average_comments_by_Category
-if __name__ == "__main__":
-    #reading the file
-    filename = "data/trends_cleaned.csv"
-    #Creating Object
-    df = perform_analysis(filename)
+        return self.df.head()
 
-    #Printing the values
-    print(f"First 5 rows for inspection \n{df.head()}")
-    print(f"\nshape:{df.shape()}") 
-    print(f"\nColumns:\n{df.columns()}")
-    print(f"\nNo of Stories in each category: \n{df.category_counts}")
-    print(f"\n Average score = {df.average_score():.2f} ")
-    print(f"\n Median of the score = {df.median_score():.2f} ")
-    print(f"\nAverage score in each category :\n {df.SCM()}")
-    print(f"\nAverage comments in each category :\n {df.CCM()}")
-    print(f"\n Highest Score = {df.highest_score():.2f}")
-    print(f"\n Story with the highest score is: \n {df.highest_score_story()}")
+    def shape(self):
+        return self.df.shape
+
+    def average_score(self):
+        return self.df["score"].mean()
+
+    def average_comments(self):
+        return self.df["num_comments"].mean()
+
+    def mean_score(self):
+        scores = self.df["score"].to_numpy()
+        return np.mean(scores)
+
+    def median_score(self):
+        scores = self.df["score"].to_numpy()
+        return np.median(scores)
+
+    def std_score(self):
+        scores = self.df["score"].to_numpy()
+        return np.std(scores)
+
+    def highest_score(self):
+        scores = self.df["score"].to_numpy()
+        return np.max(scores)
+
+    def lowest_score(self):
+        scores = self.df["score"].to_numpy()
+        return np.min(scores)
+
+    def most_common_category(self):
+        categories = self.df["category"].to_numpy()
+        unique_categories, counts = np.unique(categories,return_counts=True        )
+        index = np.argmax(counts)
+        return unique_categories[index], counts[index]
+
+    def most_commented_story(self):
+        index = np.argmax(self.df["num_comments"].to_numpy())
+        story = self.df.iloc[index]
+        return story["title"], story["num_comments"]
+
+    def add_new_columns(self):
+        self.df["engagement"] = (
+            self.df["num_comments"] /
+            (self.df["score"] + 1)
+        )
+        average_score = self.average_score()
+        self.df["is_popular"] = (
+            self.df["score"] > average_score
+        )
+
+if __name__ == "__main__":
+    input_file = "data/trends_clean.csv"
+    output_file = "data/trends_analysed.csv"
+    analysis = perform_analysis(input_file)
+    
+    print(f"Loaded data: {analysis.shape()}")
+    print("\nFirst 5 rows:")
+    print(analysis.head())
+    print(f"\nAverage score : {analysis.average_score():.2f}")
+    print(f"Average comments: {analysis.average_comments():.2f}")
+    print("\n--- NumPy Stats ---")
+    print(f"Mean score   : {analysis.mean_score():.2f}")
+    print(f"Median score : {analysis.median_score():.2f}")
+    print(f"Std deviation: {analysis.std_score():.2f}")
+    print(f"Max score    : {analysis.highest_score()}")
+    print(f"Min score : {analysis.lowest_score()}")
+    
+    category, count = analysis.most_common_category()
+    print(f"\nMost stories in: {category} ({count} stories)")
+
+    title, comments = analysis.most_commented_story()
+    print(f'\nMost commented story: {title} — {comments} comments')
+
+    analysis.add_new_columns()
+    print("\nNew columns added:")
+    print("engagement")
+    print("is_popular")
+    
+    analysis.df.to_csv(output_file,index=False)
+    print(f"\nSaved to {output_file}")
