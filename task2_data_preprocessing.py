@@ -1,69 +1,47 @@
-import json
-import os
-import csv
+import pandas as pd
 from datetime import datetime
+
+# Creating file name
 date_string = datetime.now().strftime("%Y%m%d")
-filename = f"data/trends_{date_string}.json"
-# Checking if the file exists in the first place
-if not os.path.exists(filename):
-    print(f"{filename} does not exist")
-    exit()
+input_file = f"data/trends_{date_string}.json"
 
-cleaned_stories = []
+# Opening the json file as a dataframe
+df = pd.read_json(input_file)
+print(f"Loaded {len(df)} stories from {input_file}")
 
-with open(filename, "r", encoding="utf-8") as file : #Opening the file
-    stories = json.load(file)
-   
-required_fields =  [
-    "post_id",
-    "title",
-    "category",
-    "score",
-    "num_comments",
-    "author",
-    "collected_at"
-]  
-    
-#Cleaning
-for story in stories:
-    if not all(field in story for field in required_fields):
-        continue
-    title = story["title"].strip()
-    if title == "" :
-        continue
-    score = story.get("score", 0)
-    num_comments = story.get("num_comments",0)
+# Removing duplicate stories
+df = df.drop_duplicates(subset="post_id")
+print(f"\n After removing duplicates: {len(df)}")
 
-    cleaned_story = {
-    "post_id": story["post_id"],
-    "title": title,
-    "category": story["category"],
-    "score": score,
-    "num_comments": num_comments,
-    "author": story["author"],
-    "collected_at": story["collected_at"]
-    
-    }
+# Removing rows where post_id, title, or score is missing
+df = df.dropna(subset=["post_id", "title", "score"])
+print(f"After removing nulls: {len(df)}")
 
-    cleaned_stories.append(cleaned_story)
-    
-output_file = f"data/trends_cleaned.csv" #Writing the csv file name
+# Converting score and num_comments to numeric values
+df["score"] = pd.to_numeric(df["score"], errors="coerce")
+df["num_comments"] = pd.to_numeric(df["num_comments"], errors="coerce")
 
-with open (output_file, "w", encoding = "utf-8") as file : #Writing the csv file
-   fieldnames = [
-        "post_id",
-        "title",
-        "category",
-        "score",
-        "num_comments",
-        "author",
-        "collected_at"
-    ]
-   
-   writer = csv.DictWriter(file, fieldnames = fieldnames)
-   writer.writeheader()
-   writer.writerows(cleaned_stories)
+# Removing rows where score could not be converted
+df = df.dropna(subset=["score"])
 
-print(f"Cleaned {len(cleaned_stories)} files")
-print(f"Saved to File {output_file}")
+# Converting score and num_comments to integers
+df["score"] = df["score"].astype(int)
+df["num_comments"] = df["num_comments"].astype(int)
 
+# Removing stories with scores less than 5
+df = df[df["score"] >= 5]
+print(f"After removing low scores: {len(df)}")
+
+# Removing whitespaces
+df["title"] = df["title"].str.strip()
+
+# Saveing the dataframe as csv
+output_file = "data/trends_clean.csv"
+df.to_csv(output_file, index=False)
+
+print(f"\nSaved {len(df)} rows to {output_file}")
+
+
+# Print the number of stories in each category
+print(f"\nStories per category:")
+print(df["category"].value_counts())
